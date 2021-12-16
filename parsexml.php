@@ -3,9 +3,7 @@ require_once 'init.php';
 
 class XMLParse
 {
-   const LOG_LAST_ITEM_FILE = 'channel.txt';
-   const LINKS_FILE_SCV = 'links.scv';
-
+   public $file;
    protected $xml = [];
    protected $key_words = [];
    protected $stop_words = [];
@@ -30,9 +28,7 @@ class XMLParse
 
                $sleepTime = 60 - ($currentTime - $time);
 
-               dnd('первый слип');
                sleep($sleepTime);
-               dnd('вышел со слип');
 
                $counter = 0;
 
@@ -50,6 +46,7 @@ class XMLParse
          echo $e->getMessage();
       }
 
+      $this->file = 'links' . time() . '.scv';
       $this->key_words = $key_words;
       $this->stop_words = $stop_words; 
    }
@@ -92,7 +89,7 @@ class XMLParse
 
                   $links = (string)$item->link;
                   $links .= ';';
-                  file_put_contents(self::LINKS_FILE_SCV, $links, FILE_APPEND);
+                  file_put_contents($this->file, $links, FILE_APPEND);
                }
             }
          }
