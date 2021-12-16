@@ -1,33 +1,43 @@
 <?
-
-function dd($text)
-{
-   echo '<pre>' . print_r($text, 1) . '</pre>';
-   die();
-}
-
-function dnd($text)
-{
-   echo '<pre>' . print_r($text, 1) . '</pre><br>';
-   echo '----------------------------------------------<br>';
-}
-
-$file_path = ['breakingmash.xml', 'mash.xml'];
+require_once 'init.php';
 
 class XMLParse
 {
    const LOG_LAST_ITEM_FILE = 'channel.txt';
+   const LINKS_FILE_SCV = 'links.scv';
 
    protected $xml = [];
    protected $key_words = [];
    protected $stop_words = [];
    protected $arItemLink = [];
    
-   function __construct(array $xml_path, array $words)
+   function __construct(array $xml_path, array $key_words, array $stop_words)
    {
       try{
+         $time = time();
+
+         $counter = 0;
+
          foreach ($xml_path as $key => $value) {
+
             $this->xml[$key] = simplexml_load_file($value);
+
+            $counter++;
+
+            if ($counter === 15) {
+
+               $currentTime = time();
+
+               $sleepTime = 60 - ($currentTime - $time);
+
+               dnd('первый слип');
+               sleep($sleepTime);
+               dnd('вышел со слип');
+
+               $counter = 0;
+
+               $time = time();
+            }
 
             if ($this->xml[$key] === false) {
                unset($this->xml[$key]);
@@ -39,29 +49,17 @@ class XMLParse
       catch(Exception $e){
          echo $e->getMessage();
       }
-      
 
-      $this->parseWords($words);
-   }
-   
-   protected function parseWords($words)
-   {
-      foreach ($words as $key => &$value) 
-      {
-         if (strpos($value, '-') === 0) 
-         {
-            $this->stop_words[] = substr($value, 1);
-            unset($words[$key]);
-         }
-      }
-
-      $this->key_words = $words;
+      $this->key_words = $key_words;
+      $this->stop_words = $stop_words; 
    }
    
    public function parseXml()
    {
       
       list($arItems, $arChannel) = $this->getParams();
+
+      $flag = false;
       
       foreach ($arItems as $key => $items) {
 
@@ -89,14 +87,22 @@ class XMLParse
 
             if ($this->keyWordExists($item->description)) {
                if (!$this->stopWordExists($item->description)) {
-                  
-                  $this->arItemLink[] = (string)$item->link;
+
+                  $flag = true; 
+
+                  $links = (string)$item->link;
+                  $links .= ';';
+                  file_put_contents(self::LINKS_FILE_SCV, $links, FILE_APPEND);
                }
             }
          }
       }
-      
-      return $this->arItemLink;
+
+      if ($flag) {
+         return true;
+      }else {
+         return false;
+      }
    }
 
    protected function getParams()
@@ -142,22 +148,13 @@ class XMLParse
 
    protected function getIdLastItem($nameChannel)
    {
-      if(file_exists(self::LOG_LAST_ITEM_FILE))
-      {
-         $text = file_get_contents(self::LOG_LAST_ITEM_FILE);
-         
-         $arChannel= explode(';', $text);    
-         
-         foreach ($arChannel as $value) {
-            
-            $value = explode('_', $value);
-            $chName  = array_shift($value);
-            if ($chName === $nameChannel) {
-               $lastId = array_shift($value);
+      $file = $nameChannel . '.txt';
 
-               return $lastId;
-            }
-         }
+      if(file_exists($file))
+      {
+         $lastId = file_get_contents($file);
+         
+         return $lastId;
       }
 
       return null;
@@ -165,52 +162,11 @@ class XMLParse
 
    protected function setLastItemId($channel, $itemId)
    {
-      $item = $channel . '_' . $itemId;
+      $file = $channel . '.txt';
 
-      if (file_exists(self::LOG_LAST_ITEM_FILE)) {
-
-         $text = file_get_contents(self::LOG_LAST_ITEM_FILE);
-         
-         $arChannel = explode(';', $text); 
-         
-         $channel_exists = false;
-         
-         foreach ($arChannel as $key => $value) {
-            
-            $value = explode('_', $value);
-            $chName  = array_shift($value);
-
-            if ($chName === $channel) {
-
-               $arChannel[$key] = $item;
-
-               $text = implode(';', $arChannel);
-
-               file_put_contents(self::LOG_LAST_ITEM_FILE, $text);
-
-               $channel_exists = true;
-
-               break;
-            }
-         }
-         
-         if (!$channel_exists) {
-
-            $text .= ';' . $item;
-
-            file_put_contents(self::LOG_LAST_ITEM_FILE, $text);
-         }
-         
-      }else{
-         file_put_contents(self::LOG_LAST_ITEM_FILE, $item);
-      }
+      file_put_contents($file, $itemId);
    }
 }
-
-$a = new XMLParse($file_path, [ "Форбс",'приёмная семья','-семья','бизнесмен', "Сочи", '5-летний']);
-
-$b = $a->parseXml();
-dnd($b);
 
 
 
