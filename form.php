@@ -28,7 +28,7 @@ if (empty($error)) {
    $xml = new XMLParse($links, $key_words, $stop_words);
    
    if($xml->parseXml()){
-      echo $xml->file;
+      include 'include/link.php';
    }else {
       echo 'Поиск не дал результатов';
    }

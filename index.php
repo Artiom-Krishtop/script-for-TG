@@ -29,7 +29,6 @@
               <button type="button" id="button" class="btn btn-primary">Отправить</button>
             </form>
             <div class="alert alert-info mt-3" role="alert" id="message" style="display: none;"></div>
-            <a href="links.scv" download="">Скачать ссылки в SCV формате</a>
          </div>
       </div>
    </div>

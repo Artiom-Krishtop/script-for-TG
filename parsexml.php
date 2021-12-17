@@ -3,7 +3,7 @@ require_once 'init.php';
 
 class XMLParse
 {
-   public $file;
+   protected $file;
    protected $xml = [];
    protected $key_words = [];
    protected $stop_words = [];
@@ -17,11 +17,10 @@ class XMLParse
          $counter = 0;
 
          foreach ($xml_path as $key => $value) {
-
             $this->xml[$key] = simplexml_load_file($value);
 
             $counter++;
-
+            
             if ($counter === 15) {
 
                $currentTime = time();
@@ -46,9 +45,14 @@ class XMLParse
          echo $e->getMessage();
       }
 
-      $this->file = 'links' . time() . '.scv';
+      $this->file = 'resultD' .date('m_d_y') . 'T' . date('H_i_s') . '.scv';
       $this->key_words = $key_words;
       $this->stop_words = $stop_words; 
+   }
+
+   public function getFileName()
+   {
+      return $this->file;
    }
    
    public function parseXml()
@@ -82,14 +86,18 @@ class XMLParse
                break;
             }
 
+            if (empty($this->key_words)) {
+               $flag = true; 
+
+               $this->setResults($item);
+            }
+
             if ($this->keyWordExists($item->description)) {
                if (!$this->stopWordExists($item->description)) {
 
                   $flag = true; 
 
-                  $links = (string)$item->link;
-                  $links .= ';';
-                  file_put_contents($this->file, $links, FILE_APPEND);
+                  $this->setResults($item);
                }
             }
          }
@@ -100,6 +108,13 @@ class XMLParse
       }else {
          return false;
       }
+   }
+
+   protected function setResults($item)
+   {
+      $links = (string)$item->link;
+      $links .= ';';
+      file_put_contents('result/' . $this->file, $links, FILE_APPEND);
    }
 
    protected function getParams()
@@ -145,7 +160,7 @@ class XMLParse
 
    protected function getIdLastItem($nameChannel)
    {
-      $file = $nameChannel . '.txt';
+      $file = 'cache/' . $nameChannel . '.txt';
 
       if(file_exists($file))
       {
@@ -159,7 +174,7 @@ class XMLParse
 
    protected function setLastItemId($channel, $itemId)
    {
-      $file = $channel . '.txt';
+      $file = 'cache/' . $channel . '.txt';
 
       file_put_contents($file, $itemId);
    }
