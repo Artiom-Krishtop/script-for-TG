@@ -136,8 +136,14 @@ class XMLParse
    {
 
       foreach ($this->key_words as $value) {
+
+         $description = strip_tags($description);
+
+         $value = str_replace(['\\','.', '/'], ['\\\\','\.','\/',], $value);
+
+         $pattern = '/\b' . $value .'\b/ui';
          
-         if(mb_stripos($description, $value) !== false)
+         if(preg_match($pattern, $description))
          {
             return true; 
          }
@@ -149,7 +155,14 @@ class XMLParse
    protected function stopWordExists(string $description)
    {
       foreach ($this->stop_words as $value) {
-         if(mb_stripos($description, $value) !== false)
+
+         $description = strip_tags($description);
+
+         $value = str_replace(['\\','.', '/'], ['\\\\','\.','\/',], $value);
+
+         $pattern = '/\b' . $value .'\b/ui';
+         
+         if(preg_match($pattern, $description))
          {
             return true; 
          }
